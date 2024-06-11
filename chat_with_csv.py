@@ -1,13 +1,17 @@
+import os
+from langchain_community.llms import CTransformers
 import streamlit as st 
 from streamlit_chat import message
 import tempfile
 from langchain_community.document_loaders import CSVLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_community.llms import CTransformers
 from langchain.chains import ConversationalRetrievalChain
 
 DB_FAISS_PATH = 'vectorstore/db_faiss'
+
+# Set your Hugging Face API token
+os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
 
 # Loading the model
 def load_llm():
@@ -16,7 +20,8 @@ def load_llm():
         model="llama-2-7b-chat.ggmlv3.q8_0.bin",
         model_type="llama",
         max_new_tokens=512,
-        temperature=0.5
+        temperature=0.5,
+        use_auth_token=os.environ['HUGGINGFACE_HUB_TOKEN']
     )
     return llm
 
@@ -71,3 +76,4 @@ if uploaded_file:
             for i in range(len(st.session_state['generated'])):
                 message(st.session_state["past"][i], is_user=True, key=str(i) + '_user', avatar_style="big-smile")
                 message(st.session_state["generated"][i], key=str(i), avatar_style="thumbs")
+
