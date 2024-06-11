@@ -8,3 +8,4 @@ bitsandbytes
 transformers
 sentence_transformers
 faiss_cpu
+langchain_community
