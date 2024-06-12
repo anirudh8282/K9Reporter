@@ -30,7 +30,7 @@ def load_llm():
     )
     return llm
 
-st.title("K9 REPORTER😀")
+st.title("K9 REPORTER")
 
 uploaded_file = st.sidebar.file_uploader("Upload your Data", type="csv")
 
@@ -52,7 +52,8 @@ if uploaded_file:
         }
     })
 
-    embeddings = embeddings_response.get('embeddings', [])
+    # Extract embeddings from the response
+    embeddings = [item['embedding'] for item in embeddings_response]
     
     db = FAISS.from_documents(data, embeddings)
     db.save_local(DB_FAISS_PATH)
