@@ -12,7 +12,7 @@ from langchain.chains import ConversationalRetrievalChain
 DB_FAISS_PATH = 'vectorstore/db_faiss'
 
 # Set your Hugging Face API token
-os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
+os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
 API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B"
 headers = {"Authorization": f"Bearer {os.environ['HUGGINGFACE_HUB_TOKEN']}"}
 
