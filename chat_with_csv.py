@@ -46,16 +46,13 @@ if uploaded_file:
     sentences = [record.page_content for record in data]
 
     embeddings_response = query_huggingface_api(SENTENCE_TRANSFORMER_API_URL, {
-        "inputs": {
-            "source_sentence": sentences[0],  # Use the first sentence as the source for simplicity
-            "sentences": sentences
-        }
+        "inputs": sentences,  # Pass all sentences directly
     })
 
     st.write("Embeddings Response:", embeddings_response)  # Print the embeddings response to inspect its structure
 
     # Extract embeddings from the response
-    embeddings = [item['embedding'] for item in embeddings_response]
+    embeddings = embeddings_response.get('inputs_embeds', [])
     
     db = FAISS.from_documents(data, embeddings)
     db.save_local(DB_FAISS_PATH)
