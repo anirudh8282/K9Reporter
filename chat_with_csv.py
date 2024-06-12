@@ -1,6 +1,6 @@
 import os
-from transformers import LlamaForCausalLM, LlamaTokenizer
-import streamlit as st
+from langchain_community.llms import CTransformers
+import streamlit as st 
 from streamlit_chat import message
 import tempfile
 from langchain_community.document_loaders import CSVLoader
@@ -15,15 +15,15 @@ os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
 
 # Loading the model
 def load_llm():
-    # Load the tokenizer and model from Hugging Face
-    tokenizer = LlamaTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf", use_auth_token=True)
-    model = LlamaForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf", use_auth_token=True)
-    
-    # Ensure the model is moved to the appropriate device (e.g., CPU or GPU)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model.to(device)
-    
-    return model, tokenizer, device
+    # Load the locally downloaded model here
+    llm = CTransformers(
+        model="meta-llama/Meta-Llama-3-8B",
+        model_type="llama",
+        max_new_tokens=512,
+        temperature=0.5,
+        use_auth_token=os.environ['HUGGINGFACE_HUB_TOKEN']
+    )
+    return llm
 
 st.title("K9 REPORTER")
 
@@ -41,8 +41,8 @@ if uploaded_file:
 
     db = FAISS.from_documents(data, embeddings)
     db.save_local(DB_FAISS_PATH)
-    model, tokenizer, device = load_llm()
-    chain = ConversationalRetrievalChain.from_llm(llm=model, retriever=db.as_retriever(), tokenizer=tokenizer, device=device)
+    llm = load_llm()
+    chain = ConversationalRetrievalChain.from_llm(llm=llm, retriever=db.as_retriever())
 
     def conversational_chat(query):
         result = chain({"question": query, "chat_history": st.session_state['history']})
