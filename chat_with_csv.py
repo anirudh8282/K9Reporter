@@ -1,4 +1,5 @@
 import os
+import requests
 from langchain_community.llms import CTransformers
 import streamlit as st 
 from streamlit_chat import message
@@ -12,6 +13,12 @@ DB_FAISS_PATH = 'vectorstore/db_faiss'
 
 # Set your Hugging Face API token
 os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
+API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B"
+headers = {"Authorization": f"Bearer {os.environ['HUGGINGFACE_HUB_TOKEN']}"}
+
+def query_huggingface_api(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
 
 # Loading the model
 def load_llm():
@@ -60,14 +67,21 @@ if uploaded_file:
     # container for the user's text input
     container = st.container()
 
+    use_local_model = False  # Set to True to use the local model, False to use the API
+
     with container:
         with st.form(key='my_form', clear_on_submit=True):
             user_input = st.text_input("Query:", placeholder="Talk to your csv data here (:", key='input')
             submit_button = st.form_submit_button(label='Send')
             
         if submit_button and user_input:
-            output = conversational_chat(user_input)
-            
+            # You can either use the local model or the Hugging Face API
+            if use_local_model:
+                output = conversational_chat(user_input)
+            else:
+                api_response = query_huggingface_api({"inputs": user_input})
+                output = api_response.get('generated_text', "Sorry, I couldn't generate a response.")
+
             st.session_state['past'].append(user_input)
             st.session_state['generated'].append(output)
 
