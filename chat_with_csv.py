@@ -52,6 +52,8 @@ if uploaded_file:
         }
     })
 
+    st.write("Embeddings Response:", embeddings_response)  # Print the embeddings response to inspect its structure
+
     # Extract embeddings from the response
     embeddings = [item['embedding'] for item in embeddings_response]
     
