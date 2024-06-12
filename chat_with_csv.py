@@ -17,7 +17,7 @@ os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
 def load_llm():
     # Load the locally downloaded model here
     llm = CTransformers(
-        model="llama-2-7b-chat.ggmlv3.q8_0.bin",
+        model="meta-llama/Meta-Llama-3-8B",
         model_type="llama",
         max_new_tokens=512,
         temperature=0.5,
