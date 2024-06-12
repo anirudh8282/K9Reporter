@@ -1,28 +1,26 @@
 import os
 import requests
-from langchain_community.llms import CTransformers
 import streamlit as st 
 from streamlit_chat import message
 import tempfile
 from langchain_community.document_loaders import CSVLoader
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
 
 DB_FAISS_PATH = 'vectorstore/db_faiss'
 
 # Set your Hugging Face API token
-os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
-API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B"
+os.environ['HUGGINGFACE_HUB_TOKEN'] = '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'
+LLAMA_API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B"
+SENTENCE_TRANSFORMER_API_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
 headers = {"Authorization": f"Bearer {os.environ['HUGGINGFACE_HUB_TOKEN']}"}
 
-def query_huggingface_api(payload):
-    response = requests.post(API_URL, headers=headers, json=payload)
+def query_huggingface_api(url, payload):
+    response = requests.post(url, headers=headers, json=payload)
     return response.json()
 
 # Loading the model
 def load_llm():
-    # Load the locally downloaded model here
     llm = CTransformers(
         model="meta-llama/Meta-Llama-3-8B",
         model_type="llama",
@@ -37,15 +35,25 @@ st.title("K9 REPORTER")
 uploaded_file = st.sidebar.file_uploader("Upload your Data", type="csv")
 
 if uploaded_file:
-    # use tempfile because CSVLoader only accepts a file_path
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         tmp_file.write(uploaded_file.getvalue())
         tmp_file_path = tmp_file.name
 
     loader = CSVLoader(file_path=tmp_file_path, encoding="utf-8", csv_args={'delimiter': ','})
     data = loader.load()
-    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2', model_kwargs={'device': 'cpu'})
 
+    # Prepare data for embeddings
+    sentences = [record.page_content for record in data]
+
+    embeddings_response = query_huggingface_api(SENTENCE_TRANSFORMER_API_URL, {
+        "inputs": {
+            "source_sentence": sentences[0],  # Use the first sentence as the source for simplicity
+            "sentences": sentences
+        }
+    })
+
+    embeddings = embeddings_response.get('embeddings', [])
+    
     db = FAISS.from_documents(data, embeddings)
     db.save_local(DB_FAISS_PATH)
     llm = load_llm()
@@ -75,11 +83,10 @@ if uploaded_file:
             submit_button = st.form_submit_button(label='Send')
             
         if submit_button and user_input:
-            # You can either use the local model or the Hugging Face API
             if use_local_model:
                 output = conversational_chat(user_input)
             else:
-                api_response = query_huggingface_api({"inputs": user_input})
+                api_response = query_huggingface_api(LLAMA_API_URL, {"inputs": user_input})
                 output = api_response.get('generated_text', "Sorry, I couldn't generate a response.")
 
             st.session_state['past'].append(user_input)
