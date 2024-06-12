@@ -30,7 +30,7 @@ def load_llm():
     )
     return llm
 
-st.title("K9 REPORTER")
+st.title("K9 REPORTER😀")
 
 uploaded_file = st.sidebar.file_uploader("Upload your Data", type="csv")
 
